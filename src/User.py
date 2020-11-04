@@ -27,3 +27,6 @@ def balance_enquiry():
 def main():
     # todo: USER MODULE
     return
+
+
+main()

@@ -18,6 +18,9 @@ def view_status():
 
 
 # Provides a menu for the administrator.
-def menu():
+def main():
     # todo: ADMIN MODULE
     return
+
+
+main()
