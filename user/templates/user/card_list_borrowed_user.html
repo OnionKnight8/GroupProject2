@@ -1,0 +1,19 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>My ATM Cards</h1>
+
+    {% if card_list %}
+    <ul>
+
+      {% for card in card_list %}
+      <li class="{% if card.is_expired %}text-danger{% endif %}">
+        <a href="{% url 'card_detail' card.id %}">{{card.id}}</a> ({{ card.expiry_date }})
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% else %}
+      <p>You do not own any ATM Cards.</p>
+    {% endif %}
+{% endblock %}

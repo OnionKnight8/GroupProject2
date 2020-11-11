@@ -1,0 +1,14 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>ATM Machine Home</h1>
+  <p>Welcome to the ATM Machine service!</p>
+  <h2>Dynamic content</h2>
+  <p>Placeholder stats:</p>
+  <ul>
+    <li><strong>ATM Cards:</strong> {{ num_cards }}</li>
+    <li><strong>Open ATM Cards:</strong> {{ open_cards }}</li>
+  </ul>
+
+  <p>You have visited this page {{ num_visits }}{% if num_visits == 1 %} time{% else %} times{% endif %}.</p>
+{% endblock %}

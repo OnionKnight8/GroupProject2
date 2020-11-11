@@ -1,0 +1,10 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Card: {{ card.id }}</h1>
+
+  <p><strong>Owner:</strong> <a href="">{{ card.id }}</a></p>
+  <p><strong>Date of Issue:</strong> {{ card.date_of_issue }}</p>
+  <p><strong>Date of Expiration:</strong> {{ card.expiry_date }}</p>
+  <p><strong>Card Status:</strong> {{ card.card_status }}</p>
+{% endblock %}
