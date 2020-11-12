@@ -35,3 +35,19 @@ class Card(models.Model):
         if self.expiry_date and datetime.now().date() > self.expiry_date:
             return True
         return False
+
+
+class Customer(models.Model):
+    #Fields:
+    user = models.OneToOneField(User, null=True, blank=True)
+    # todo: pin number
+    # todo: name
+    # todo: address
+    # todo: balance
+    # todo: phone number
+
+    #Methods:
+    #todo: withdraw money
+    
+    #todo: deposit money
+    
