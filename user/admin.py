@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Card, User
+from .models import Card, Customer
 
 
 # Register your models here.
@@ -16,4 +16,20 @@ class CardAdmin(admin.ModelAdmin):
         ('Edit:', {
             'fields': ('card_status', 'expiry_date')
         }),
+    )
+
+
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'phone_number', 'address')
+    readonly_fields = ['user', 'id']
+    list_filter = ('user', 'id')
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'user')
+        }),
+        ('Edit:', {
+            'fields': ('pin_number', 'address', 'phone_number')
+        })
     )

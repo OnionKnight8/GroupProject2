@@ -1,35 +1,64 @@
-from django.http import Http404
-from django.shortcuts import render
-from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
-from user.models import Card, User
+from django.http import Http404
+from django.shortcuts import render, redirect
+from django.views import generic
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from user.models import Card, Customer
+from .forms import ExtendedUserCreationForm, CustomerForm
 
 
 # Create your views here.
+# Asks user to log in on homepage.
 def index(request):
-    num_cards = Card.objects.all().count()
-    num_users = User.objects.all().count()
-    open_cards = Card.objects.filter(card_status='OP').count()
+    if request.user.is_authenticated:
+        username = request.user.username
+    else:
+        username = "not logged in"
 
-    # Number of visits to this view, as counted in the session variable.
-    num_visits = request.session.get('num_visits', 0)
-    request.session['num_visits'] = num_visits + 1
+    context = {'username': username}
+    return render(request, 'index.html', context)
 
-    context = {
-        'num_cards': num_cards,
-        'num_users': num_users,
-        'open_cards': open_cards,
-        'num_visits': num_visits,
-    }
-
-    return render(request, 'index.html', context=context)
+# todo: add user profile page
 
 
-class CardListView(generic.ListView):
+def register(request):
+    if request.method == "POST":
+        form = ExtendedUserCreationForm(request.POST)
+        customer_form = CustomerForm(request.POST)
+
+        if form.is_valid() and customer_form.is_valid():
+            user = form.save()
+
+            customer = customer_form.save(commit=False)
+            customer.user = user
+            customer.save()
+
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            login(request, user)
+
+            return redirect('/')
+    else:
+        form = ExtendedUserCreationForm()
+        customer_form = CustomerForm()
+
+    context = {'form': form, 'customer_form': customer_form}
+    return render(request, 'user/register.html', context)
+
+
+# Shows cards owned by user when they are logged in.
+class OwnedCardsByUserListView(LoginRequiredMixin, generic.ListView):
     model = Card
+    template_name = 'user/card_list_borrowed_user.html'
     paginate_by = 10
 
+    def get_queryset(self):
+        return Card.objects.filter(owner_id=self.request.user).filter(card_status__exact='OP').order_by('date_of_issue')
 
+
+# Shows details about a specific ATM card.
 class CardDetailView(generic.DetailView):
     model = Card
 
@@ -40,13 +69,3 @@ class CardDetailView(generic.DetailView):
             raise Http404('Book does not exist')
 
         return render(request, 'user/card_detail.html', context={'card': Card})
-
-
-class OwnedCardsByUserListView(LoginRequiredMixin, generic.ListView):
-    """Generic class-based view listing books on loan to current user."""
-    model = Card
-    template_name = 'user/card_list_borrowed_user.html'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return Card.objects.filter(owner_id=self.request.user).filter(card_status__exact='OP').order_by('date_of_issue')
