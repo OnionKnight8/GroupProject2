@@ -1,10 +1,12 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404
-from django.shortcuts import render, redirect
-from django.views import generic
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import generic
 from django.contrib.auth import authenticate, login
-from user.models import Card, Customer
+from user.models import Card
+from django.contrib import messages
 from .forms import ExtendedUserCreationForm, CustomerForm
 
 
@@ -39,13 +41,28 @@ def register(request):
             user = authenticate(username=username, password=password)
             login(request, user)
 
-            return redirect('/')
+            return HttpResponseRedirect('/user')
     else:
         form = ExtendedUserCreationForm()
         customer_form = CustomerForm()
 
     context = {'form': form, 'customer_form': customer_form}
     return render(request, 'user/register.html', context)
+
+
+@login_required
+def confirm_card(request):
+    if request.method == 'POST':
+        card = Card(owner_id=request.user)
+        card.save()
+        return HttpResponseRedirect('/user/cardconfirmed/')
+    context = {}
+    return render(request, 'user/confirmcard.html', context)
+
+
+def confirmation_screen(request):
+    context = {}
+    return render(request, 'user/cardconfirmed.html', context)
 
 
 # Shows cards owned by user when they are logged in.
@@ -55,7 +72,7 @@ class OwnedCardsByUserListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Card.objects.filter(owner_id=self.request.user).filter(card_status__exact='OP').order_by('date_of_issue')
+        return Card.objects.filter(owner_id=self.request.user).order_by('date_of_issue')
 
 
 # Shows details about a specific ATM card.
@@ -64,8 +81,10 @@ class CardDetailView(generic.DetailView):
 
     def card_detail_view(request, primary_key):
         try:
-            book = Card.objects.get(pk=primary_key)
+            card = Card.objects.get(pk=primary_key)
         except Card.DoesNotExist:
             raise Http404('Book does not exist')
 
         return render(request, 'user/card_detail.html', context={'card': Card})
+
+

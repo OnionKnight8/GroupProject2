@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Card, Customer
+from django.http import HttpResponseRedirect
+
+from .models import Card, Customer, ATMMachine
 
 
 # Register your models here.
@@ -22,14 +24,33 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'phone_number', 'address')
-    readonly_fields = ['user', 'id']
+    readonly_fields = ['user', 'id', 'balance']
     list_filter = ('user', 'id')
 
     fieldsets = (
         (None, {
-            'fields': ('id', 'user')
+            'fields': ('id', 'user', 'balance')
         }),
         ('Edit:', {
             'fields': ('pin_number', 'address', 'phone_number')
+        })
+    )
+
+
+@admin.register(ATMMachine)
+class MachineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'address', 'machine_status', 'last_refill_date', 'next_refill_date', 'current_balance')
+    readonly_fields = ['id', 'current_balance', 'last_refill_date']
+    list_filter = ['machine_status']
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'address')
+        }),
+        ('Refill Status:', {
+            'fields': ('last_refill_date', 'next_refill_date', 'current_balance')
+        }),
+        ('Edit:', {
+            'fields': ('machine_status', 'min_balance_inquiry')
         })
     )

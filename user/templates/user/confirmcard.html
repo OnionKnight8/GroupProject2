@@ -1,0 +1,26 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>Confirm Card Activation:</h1>
+<h2>Please confirm the details below:</h2>
+
+<p>Date of Issue (Current Date):</p>
+<p id="datetime"></p>
+<p></p>
+<p>Expiration Date (Two Years from Now):</p>
+<p id="expiredate"></p>
+<script>
+    var dt = new Date();
+    var df = new Date();
+    document.getElementById("datetime").innerHTML = dt.toLocaleDateString();
+    df.setDate(df.getDate() + 730);
+    document.getElementById("expiredate").innerHTML = df.toLocaleDateString();
+</script>
+
+<form method="POST" action="">{% csrf_token %}
+    <button class="button button1" type="submit">Register</button>
+</form>
+<form action="/user/mycards/">
+    <input class='button button1' type="submit" value="Cancel" />
+</form>
+{% endblock %}

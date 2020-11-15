@@ -1,0 +1,10 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>Card Confirmed:</h1>
+<h3>Your new ATM card has been confirmed and is awaiting admin approval.</h3>
+
+<form action="/user/mycards/">
+    <input class='button button1' type="submit" value="Return" />
+</form>
+{% endblock %}

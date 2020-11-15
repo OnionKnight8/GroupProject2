@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Customer
+from .models import Card, Customer
+from datetime import datetime, timedelta
 
 
 class ExtendedUserCreationForm(UserCreationForm):
