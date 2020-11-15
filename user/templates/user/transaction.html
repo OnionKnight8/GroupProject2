@@ -1,0 +1,15 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>New Transaction</h1>
+<h3>Please enter the following details:</h3>
+<form method="POST" action="{% url 'transaction' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input class='button button1' type="submit" value="Confirm">
+</form>
+<form action="/user/transaction/">
+    <input class='button button1' type="submit" value="Cancel" />
+</form>
+
+{% endblock %}

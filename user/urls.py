@@ -8,4 +8,5 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('confirmcard/', views.confirm_card, name='confirm-card'),
     path('cardconfirmed/', views.confirmation_screen, name='card-confirmed'),
+    path('transaction/', views.create_transaction, name='transaction'),
 ]

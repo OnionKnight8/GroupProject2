@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Card, Customer
+from .models import Card, Customer, Transaction
 from datetime import datetime, timedelta
 
 
@@ -32,11 +32,7 @@ class CustomerForm(forms.ModelForm):
         fields = ('pin_number', 'address', 'phone_number')
 
 
-class WithdrawMoney(forms.Form):
-    # todo: form to let user withdraw money
-    print("placeholder")
-
-
-class DepositMoney(forms.Form):
-    #todo: form to let user deposit money
-    print("placeholder")
+class TransactionForm(forms.ModelForm):
+    class Meta:
+        model = Transaction
+        fields = ('transaction_type', 'card_id', 'machine_id', 'transaction_amount')

@@ -1,13 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from user.models import Card
-from django.contrib import messages
-from .forms import ExtendedUserCreationForm, CustomerForm
+from user.models import Card, Customer
+from .forms import ExtendedUserCreationForm, CustomerForm, TransactionForm
 
 
 # Create your views here.
@@ -83,8 +81,46 @@ class CardDetailView(generic.DetailView):
         try:
             card = Card.objects.get(pk=primary_key)
         except Card.DoesNotExist:
-            raise Http404('Book does not exist')
+            raise Http404('Card does not exist')
 
         return render(request, 'user/card_detail.html', context={'card': Card})
 
+
+@login_required
+def create_transaction(request):
+    if request.method == 'POST':
+        form = TransactionForm(request.POST)
+        form.fields['card_id'].queryset = Card.objects.filter(owner_id=request.user)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+
+            atm_machine = instance.machine_id
+            customer = request.user.customer
+            if instance.card_id.is_expired:
+                instance.transaction_status = 'CA'
+                instance.response_code = 54
+                instance.save()
+            else:
+                if instance.transaction_type == 'DE':
+                    customer.balance += instance.transaction_amount
+                    customer.save()
+                    atm_machine.current_balance += instance.transaction_amount
+                    atm_machine.save()
+                elif instance.transaction_type == 'WI':
+                    if atm_machine.current_balance >= instance.transaction_amount and customer.balance >= instance.transaction_amount:
+                        customer.balance -= instance.transaction_amount
+                        customer.save()
+                        atm_machine.current_balance -= instance.transaction_amount
+                        atm_machine.save()
+                    else:
+                        instance.transaction_status = 'CA'
+                        instance.response_code = 51
+                        instance.save()
+
+            return HttpResponseRedirect('/user') # todo: change to transaction history
+    else:
+        form = TransactionForm()
+        form.fields['card_id'].queryset = Card.objects.filter(owner_id=request.user)
+    return render(request, 'user/transaction.html', {'form': form, })
 

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 
-from .models import Card, Customer, ATMMachine
+from .models import Card, Customer, ATMMachine, Transaction
 
 
 # Register your models here.
@@ -52,5 +52,24 @@ class MachineAdmin(admin.ModelAdmin):
         }),
         ('Edit:', {
             'fields': ('machine_status', 'min_balance_inquiry')
+        })
+    )
+
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'date', 'transaction_type', 'transaction_status', 'card_id')
+    readonly_fields = ['id', 'date']
+    list_filter = ('date', 'transaction_status', 'transaction_type')
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'date', 'machine_id')
+        }),
+        ('User Info:', {
+            'fields': ('card_id', 'transfer_id')
+        }),
+        ('Transaction Info:', {
+            'fields': ('transaction_type', 'transaction_status', 'response_code')
         })
     )

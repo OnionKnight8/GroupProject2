@@ -1,6 +1,8 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from datetime import datetime, timedelta
 import secrets
 
@@ -55,7 +57,8 @@ class Customer(models.Model):
     address = models.CharField(max_length=300, help_text="User's address.", blank=False)
     # todo: better address validation if there is remaining time
 
-    balance = models.PositiveIntegerField(default=0, help_text="User's balance.", blank=False, )
+    balance = models.DecimalField(default=0, help_text="User's balance.", blank=False,
+                                  decimal_places=2, max_digits=12, validators=[MinValueValidator(Decimal('0'))],)
 
     # Regex validator used to verify phone number
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
@@ -66,8 +69,8 @@ class Customer(models.Model):
 
     # Methods:
     def __str__(self):
-        string = ("Username: %s\nPIN: %s\nAddress: %s\nBalance: %s\nPhone Number: %s\n" %
-                  (self.user, self.pin_number, self.address, self.balance, self.phone_number))
+        string = ("Username: %s\n" %
+                  (self.user,))
         return string
 
     # todo: withdraw money
@@ -101,12 +104,72 @@ class ATMMachine(models.Model):
     min_balance_inquiry = models.PositiveIntegerField(default=25, blank=False,
                                                       help_text="The minimum balance enquiry. There is usually no "
                                                                 "reason to change this.",)
-    current_balance = models.PositiveIntegerField(default=0, help_text="Machine's current balance.", blank=False, )
+    current_balance = models.DecimalField(default=0, decimal_places=2, max_digits=12,
+                                          validators=[MinValueValidator(Decimal('0'))],
+                                          help_text="Machine's current balance.", blank=False, )
 
     # Methods
     def __str__(self):
-        string = ("Address: %s\nStatus: %s\nLast Refill: %s\nNext Refill: %s\nMinimum Balance Inquiry: %s\n"
-                  "Current Balance:" %
-                  (self.address, self.machine_status, self.last_refill_date,
-                   self.next_refill_date, self.current_balance))
+        string = ("Address: %s\n" %
+                  (self.address,))
+        return string
+
+
+class Transaction(models.Model):
+    # Fields:
+    date = models.DateTimeField(auto_now=True, help_text= "The date and time the transaction was performed.", )
+    card_id = models.ForeignKey(Card, on_delete=models.CASCADE, help_text="Card from which transaction was performed.",)
+    machine_id = models.ForeignKey(ATMMachine, on_delete=models.CASCADE,
+                                   help_text="ATM from which transaction was performed.")
+
+    # Transaction Status Options
+    COMPLETED = 'CO'
+    CANCELED = 'CA'
+    TRANSACTION_STATUS_CHOICES = (
+        (COMPLETED, 'Completed'),
+        (CANCELED, 'Canceled'),
+    )
+    transaction_status = models.CharField(max_length=10, choices=TRANSACTION_STATUS_CHOICES, default=COMPLETED,
+                                          help_text="Status of transaction.", )
+
+    # ATM response codes from https://www.cardaccess.com.au/bank-response-codes/, only using relevant ones.
+    TRANSACTION_APPROVED = 00
+    INSUFFICIENT_FUNDS = 51
+    EXPIRED_CARD = 54
+    RESPONSE_CODE_CHOICES = (
+        (TRANSACTION_APPROVED, 00),
+        (INSUFFICIENT_FUNDS, 51),
+        (EXPIRED_CARD, 54),
+    )
+    response_code = models.IntegerField(choices=RESPONSE_CODE_CHOICES, default=TRANSACTION_APPROVED,
+                                        help_text="Transaction response codes. Refer to the following link "
+                                                  "for more information: "
+                                                  "https://www.cardaccess.com.au/bank-response-codes/", )
+
+    # Choices for types of transactions
+    DEPOSIT = 'DE'
+    WITHDRAWAL = 'WI'
+    TRANSFER = 'TR'
+    TRANSACTION_TYPE_CHOICES = (
+        (DEPOSIT, 'Deposit'),
+        (WITHDRAWAL, 'Withdrawal'),
+        (TRANSFER, 'Transfer'),
+    )
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default=DEPOSIT, blank=False,
+                                        help_text="The type of transaction to be processed.", )
+
+    transfer_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, default=None,
+                                    help_text="User in which money is transferred to. Only used in a transfer.",
+                                    related_name='receiver')
+
+    transaction_amount = models.DecimalField(default=25, blank=False, null=False, decimal_places=2,
+                                             max_digits=12, validators=[MinValueValidator(Decimal('0'))],
+                                             help_text="Amount of money involved in transaction.",)
+
+    # Methods:
+    def __str__(self):
+        string = ("Date: %s\nCard ID:: %s\nMachine ID: %s\nTransaction Status: %s\nResponse Coder: %s\n"
+                  "Transaction Type: %s\nTransfer ID: %s\nTransaction Amount: %s\n" %
+                  (self.date, self.card_id, self.machine_id, self.transaction_status, self.response_code,
+                   self.transaction_type, self.transfer_id, self.transaction_amount))
         return string
