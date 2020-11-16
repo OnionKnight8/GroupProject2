@@ -36,3 +36,21 @@ class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ('transaction_type', 'card_id', 'machine_id', 'transaction_amount')
+
+    # Custom init so that only DEPOSIT and WITHDRAWAL options are available here.
+    def __init__(self, *args, **kwargs):
+        DEPOSIT = 'DE'
+        WITHDRAWAL = 'WI'
+        TRANSACTION_TYPE_CHOICES = (
+            (DEPOSIT, 'Deposit'),
+            (WITHDRAWAL, 'Withdrawal'),
+        )
+        super(TransactionForm, self).__init__(*args, **kwargs)
+        self.fields['transaction_type'] = forms.ChoiceField(
+            choices=TRANSACTION_TYPE_CHOICES)
+
+
+class TransferForm(forms.ModelForm):
+    class Meta:
+        model = Transaction
+        fields = ('transaction_amount', 'transfer_id')

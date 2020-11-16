@@ -4,8 +4,8 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from user.models import Card, Customer
-from .forms import ExtendedUserCreationForm, CustomerForm, TransactionForm
+from user.models import Card, Transaction
+from .forms import ExtendedUserCreationForm, CustomerForm, TransactionForm, TransferForm
 
 
 # Create your views here.
@@ -13,10 +13,15 @@ from .forms import ExtendedUserCreationForm, CustomerForm, TransactionForm
 def index(request):
     if request.user.is_authenticated:
         username = request.user.username
+        balance = request.user.customer.balance
+        current_id = request.user.customer.id
+
     else:
         username = "not logged in"
+        balance = None
+        current_id = None
 
-    context = {'username': username}
+    context = {'username': username, 'balance': balance, 'id': current_id}
     return render(request, 'index.html', context)
 
 # todo: add user profile page
@@ -73,6 +78,16 @@ class OwnedCardsByUserListView(LoginRequiredMixin, generic.ListView):
         return Card.objects.filter(owner_id=self.request.user).order_by('date_of_issue')
 
 
+# Shows transactions owned by user when they are logged in.
+class OwnedTransactionsByUserListView(LoginRequiredMixin, generic.ListView):
+    model = Transaction
+    template_name = 'user/transaction_list_borrowed_user.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Transaction.objects.filter(card_id__owner_id=self.request.user)
+
+
 # Shows details about a specific ATM card.
 class CardDetailView(generic.DetailView):
     model = Card
@@ -84,6 +99,19 @@ class CardDetailView(generic.DetailView):
             raise Http404('Card does not exist')
 
         return render(request, 'user/card_detail.html', context={'card': Card})
+
+
+# Shows details about a specific ATM card.
+class TransactionDetailView(generic.DetailView):
+    model = Transaction
+
+    def transaction_detail_view(request, primary_key):
+        try:
+            transaction = Transaction.objects.get(pk=primary_key)
+        except Transaction.DoesNotExist:
+            raise Http404('Card does not exist')
+
+        return render(request, 'user/transaction_detail.html', context={'transaction': Transaction})
 
 
 @login_required
@@ -124,3 +152,28 @@ def create_transaction(request):
         form.fields['card_id'].queryset = Card.objects.filter(owner_id=request.user)
     return render(request, 'user/transaction.html', {'form': form, })
 
+
+@login_required
+def create_transfer(request):
+    if request.method == 'POST':
+        form = TransferForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.transaction_type = 'TR'
+            instance.save()
+
+            current_user = request.user.customer
+            other_user = instance.transfer_id.customer
+            if current_user.balance >= instance.transaction_amount:
+                current_user.balance -= instance.transaction_amount
+                current_user.save()
+                other_user.balance += instance.transaction_amount
+                other_user.save()
+            else:
+                instance.transaction_status = 'CA'
+                instance.response_code = 51
+                instance.save()
+        return HttpResponseRedirect('/user')  # todo: change to transaction history
+    else:
+        form = TransferForm()
+    return render(request, 'user/transfer.html', {'form': form, })

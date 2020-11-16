@@ -1,0 +1,19 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>My Transactions</h1>
+
+    {% if transaction_list %}
+    <ul>
+
+      {% for transaction in transaction_list %}
+      <li class="{% if transaction.is_canceled %}text-danger{% endif %}">
+        <a href="{% url 'transaction_detail' transaction.id %}">{{transaction.id}}</a> ({{ transaction.transaction_type }}) ({{ transaction.transaction_status }})
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% else %}
+      <p>You have not made any transactions.</p>
+    {% endif %}
+{% endblock %}

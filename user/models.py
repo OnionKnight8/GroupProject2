@@ -118,8 +118,9 @@ class ATMMachine(models.Model):
 class Transaction(models.Model):
     # Fields:
     date = models.DateTimeField(auto_now=True, help_text= "The date and time the transaction was performed.", )
-    card_id = models.ForeignKey(Card, on_delete=models.CASCADE, help_text="Card from which transaction was performed.",)
-    machine_id = models.ForeignKey(ATMMachine, on_delete=models.CASCADE,
+    card_id = models.ForeignKey(Card, on_delete=models.CASCADE, help_text="Card from which transaction was performed.",
+                                blank=False, null=True, default=None)
+    machine_id = models.ForeignKey(ATMMachine, on_delete=models.CASCADE, blank=False, null=True, default=None,
                                    help_text="ATM from which transaction was performed.")
 
     # Transaction Status Options
@@ -173,3 +174,8 @@ class Transaction(models.Model):
                   (self.date, self.card_id, self.machine_id, self.transaction_status, self.response_code,
                    self.transaction_type, self.transfer_id, self.transaction_amount))
         return string
+
+    def is_canceled(self):
+        if self.transaction_status == 'CA':
+            return True
+        return False

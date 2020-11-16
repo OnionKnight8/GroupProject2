@@ -1,0 +1,13 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Transaction: {{ transaction.id }}</h1>
+
+  <p><strong>Card:</strong> <a href="">{{ transaction.card_id }}</a></p>
+  <p><strong>Date:</strong> {{ transaction.date }}</p>
+  <p><strong>Transaction Type:</strong> {{ transaction.transaction_type }}</p>
+  <p><strong>Transaction Amount:</strong> {{ transaction.transaction_amount }}</p>
+  <p><strong>Transfer Target:</strong> {{ transaction.transfer_id }}</p>
+  <p><strong>Transaction Status:</strong> {{ transaction.transaction_status }}</p>
+  <p><strong>Response Code:</strong> {{ transaction.response_code }}</p>
+{% endblock %}
