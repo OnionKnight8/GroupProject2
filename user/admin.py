@@ -24,7 +24,7 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'phone_number', 'address')
-    readonly_fields = ['user', 'id', 'balance']
+    readonly_fields = ['id', 'balance']
     list_filter = ('user', 'id')
 
     fieldsets = (

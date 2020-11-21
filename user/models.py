@@ -4,7 +4,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, MinValueValidator
 from datetime import datetime, timedelta
-import secrets
 
 
 class Card(models.Model):
@@ -47,7 +46,7 @@ class Card(models.Model):
 class Customer(models.Model):
     # Fields:
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE,
-                                help_text="The user's login name.", )
+                                help_text="The user's login name.", unique=True)
 
     pin_regex = RegexValidator(regex=r'^\d{1,10}$',
                                message="PIN number must be 4 digits.")
